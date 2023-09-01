@@ -6,6 +6,7 @@ const nextConfig = {
       "avatars.githubusercontent.com",
       "user-images.githubusercontent.com",
       "localhost",
+      "yatri-onn-time-storage.s3.ap-southeast-1.amazonaws.com",
     ],
   },
   async rewrites() {

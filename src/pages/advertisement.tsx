@@ -77,7 +77,7 @@ const Advertisement: FC<AdvertisementProps> = () => {
           return (
             <>
               <Image
-                src={`${server}/${params.row.image}`}
+                src={params.row.image}
                 alt="alt"
                 width={256}
                 height={256}
