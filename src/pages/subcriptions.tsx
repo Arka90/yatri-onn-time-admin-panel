@@ -1,10 +1,13 @@
 import DeleteAction from "@/components/actions/deleteAction";
+import EditAction from "@/components/actions/editAction";
+import EditSubscriptionForm from "@/components/forms/editSubscriptionForm";
 import SubscriptionForm from "@/components/forms/subscriptionForm";
 import useApi from "@/hooks/userApi";
 import BasicLayout from "@/layout/basicLayout";
 import deleteSubcriptionById from "@/lib/subscriptions/deleteSubscription";
 import getAllSubscriptions from "@/lib/subscriptions/getAllSubscriptions";
 import useStore from "@/store";
+import { TSubcription } from "@/types/subcriptions";
 import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import moment from "moment";
@@ -12,9 +15,22 @@ import { FC, useEffect, useMemo, useState } from "react";
 
 type SubcriptionsProps = {};
 
+const initialSubState: TSubcription = {
+  _id: "",
+  title: "",
+  validity: 0,
+  price: 0,
+  compare_price: 0,
+  no_of_reminder: 0,
+  status: false,
+};
+
 const Subcriptions: FC<SubcriptionsProps> = () => {
   const [rowId, setRowId] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [showForm, setShowForm] = useState<boolean>(false);
+  const [subscription, setSubcription] =
+    useState<TSubcription>(initialSubState);
   const api = useApi();
   const store = useStore();
 
@@ -84,30 +100,29 @@ const Subcriptions: FC<SubcriptionsProps> = () => {
         width: 110,
         editable: true,
       },
-      // {
-      //     field: "actions",
-      //     headerName: "Actions",
-      //     width: 250,
-      //     sortable: false,
-      //     filterable: false,
-      //     disableColumnMenu: true,
-      //     renderCell: (params) => {
-      //         return (
-      //             <>
-      //                 <DeleteAction
-      //                     {...{
-      //                         params,
-      //                         rowId,
-      //                         setRowId,
-      //                         action: deleteSubcriptionById,
-      //                         storeAction:
-      //                             store.actions.deleteSubcriptionsById,
-      //                     }}
-      //                 />
-      //             </>
-      //         );
-      //     },
-      // },
+      {
+        field: "actions",
+        headerName: "Actions",
+        width: 250,
+        sortable: false,
+        filterable: false,
+        disableColumnMenu: true,
+        renderCell: (params) => {
+          return (
+            <>
+              <EditAction
+                {...{
+                  params,
+                  rowId,
+                  setRowId,
+                  setSubcription,
+                  handelShowForm: setShowForm,
+                }}
+              />
+            </>
+          );
+        },
+      },
     ],
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -138,6 +153,21 @@ const Subcriptions: FC<SubcriptionsProps> = () => {
             </DialogContent>
           </div>
         </Dialog>
+        {showForm && (
+          <Dialog open={showForm} onClose={closeForm}>
+            <div className="bg-slate-800 text-white ">
+              <DialogTitle>
+                <h2 className="text-white">Add new Subscription</h2>
+              </DialogTitle>
+              <DialogContent className="">
+                <EditSubscriptionForm
+                  handleClose={setShowForm}
+                  subscription={subscription}
+                />
+              </DialogContent>
+            </div>
+          </Dialog>
+        )}
       </div>
       <Box sx={{ height: 400, width: "100%" }}>
         <DataGrid
