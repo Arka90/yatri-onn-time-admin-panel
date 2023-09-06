@@ -68,7 +68,7 @@ const Transactions: FC<TransactionsProps> = () => {
         headerName: "Date",
         width: 250,
         renderCell: (params) =>
-          moment(params.row.registered_at).format("DD/MM/YYYY (hh:mm)"),
+          moment(params.row.date).format("DD/MM/YYYY (hh:mm)"),
       },
       {
         field: "status",
