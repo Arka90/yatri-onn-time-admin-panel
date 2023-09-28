@@ -1,9 +1,10 @@
 import axios from "@/config/axios";
-import { TFaq } from "@/types/faq";
 
-const getAllReminders = async (): Promise<TFaq[]> => {
-    const { data } = await axios.get("/api/faq");
-    return data as TFaq[];
+import { TReminder } from "@/types/reminders";
+
+const getAllReminders = async (): Promise<TReminder[]> => {
+  const { data } = await axios.get("api/reminder");
+  return data as TReminder[];
 };
 
 export default getAllReminders;
