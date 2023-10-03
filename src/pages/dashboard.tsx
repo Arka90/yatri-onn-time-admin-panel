@@ -10,7 +10,7 @@ import Transaction from "@/components/dashboard/transaction";
 import getAllUsers from "@/lib/users/getAllUsers";
 import useStore from "@/store";
 import { useEffect } from "react";
-import getAllReminders from "@/lib/faq/getAllFaqs";
+import getAllReminders from "@/lib/reminders/getAllReminders";
 import getAllSubscriptions from "@/lib/subscriptions/getAllSubscriptions";
 import getAllAdvertisements from "@/lib/advertisements/getAllAdvertisements";
 type DashboardProps = {};
