@@ -1,217 +1,268 @@
-import DeleteAction from "@/components/actions/deleteAction";
-import EditAction from "@/components/actions/editAction";
-import EditSubscriptionForm from "@/components/forms/editSubscriptionForm";
-import SubscriptionForm from "@/components/forms/subscriptionForm";
-import useApi from "@/hooks/userApi";
 import BasicLayout from "@/layout/basicLayout";
-import deleteSubcriptionById from "@/lib/subscriptions/deleteSubscription";
-import getAllSubscriptions from "@/lib/subscriptions/getAllSubscriptions";
-import useStore from "@/store";
-import { TSubcription } from "@/types/subcriptions";
-import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import moment from "moment";
-import { FC, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid"; // Import Heroicons icons // Import Heroicons icons
 
-type SubcriptionsProps = {};
+const ProductsPage: React.FC = () => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false); // Track whether we're in edit mode
 
-const initialSubState: TSubcription = {
-  _id: "",
-  title: "",
-  validity: 0,
-  price: 0,
-  compare_price: 0,
-  no_of_reminder: 0,
-  status: false,
+    // State for new/edit product fields
+    const [productToEdit, setProductToEdit] = useState({
+        _id: "",
+        name: "",
+        description: "",
+        image: "",
+        price: "",
+    });
+
+    const products: storeTypes[] = [
+        {
+            _id: "651cf6aaa46049907e6229f8",
+            name: "New Shirt",
+            description: "New Description............",
+            price: "599",
+            image: "https://yatri-onn-time-storage.s3.ap-southeast-1.amazonaws.com/a4cc6b60dcee4a49de8eb4c3189da692",
+            inStock: true,
+        },
+        // Add more products here if needed
+    ];
+
+    const openModal = () => {
+        setIsModalOpen(true);
+        setIsEditing(false); // Reset to add mode
+        // Clear the productToEdit state
+        setProductToEdit({
+            _id: "",
+            name: "",
+            description: "",
+            image: "",
+            price: "",
+        });
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setProductToEdit({
+            ...productToEdit,
+            [name]: value,
+        });
+    };
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]; // Get the selected file
+
+        if (file) {
+            // Read the selected file as a data URL
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProductToEdit({
+                    ...productToEdit,
+                    image: reader.result as string,
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleAddProduct = () => {
+        // Add your logic here to save the new product to your data source
+        console.log("New Product:", productToEdit);
+
+        // Close the modal
+        closeModal();
+    };
+
+    const handleEditProduct = (product: storeTypes) => {
+        // Set the productToEdit state with the data of the product being edited
+        setProductToEdit(product);
+        setIsEditing(true); // Switch to edit mode
+        setIsModalOpen(true); // Open the modal
+    };
+
+    return (
+        <BasicLayout>
+            <>
+                <div className="font-semibold text-4xl text-slate-800 mb-6">
+                    Product details
+                </div>
+                <button
+                    onClick={openModal}
+                    className="btn text-white bg-slate-800 hover:bg-slate-700"
+                >
+                    Add a new Product
+                </button>
+                <div className="col-span-2 card h-fit my-5">
+                    <div className="flex items-center justify-around">
+                        <div className="overflow-x-auto">
+                            <table
+                                className="w-full table-auto"
+                                style={{ width: "80vw" }}
+                            >
+                                <thead>
+                                    <tr>
+                                        <th className="border px-4 py-2">ID</th>
+                                        <th className="border px-4 py-2">
+                                            Name
+                                        </th>
+                                        <th className="border px-4 py-2">
+                                            Description
+                                        </th>
+                                        <th className="border px-4 py-2">
+                                            Price
+                                        </th>
+                                        <th className="border px-4 py-2">
+                                            Image
+                                        </th>
+                                        <th className="border px-4 py-2">
+                                            In Stock
+                                        </th>
+                                        <th className="border px-4 py-2">
+                                            Edit
+                                        </th>{" "}
+                                        {/* New column for actions */}
+                                        <th className="border px-4 py-2">
+                                            Delete
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {products.map((product) => (
+                                        <tr key={product._id}>
+                                            <td className="border px-4 py-2 text-center">
+                                                {product._id}
+                                            </td>
+                                            <td className="border px-4 py-2 text-center">
+                                                {product.name}
+                                            </td>
+                                            <td className="border px-4 py-2 text-center">
+                                                {product.description}
+                                            </td>
+                                            <td className="border px-4 py-2 text-center">
+                                                {product.price}
+                                            </td>
+                                            <td className="border px-4 py-2 text-center">
+                                                <img
+                                                    src={product.image}
+                                                    alt={product.name}
+                                                    style={{
+                                                        maxWidth: "100px",
+                                                    }}
+                                                />
+                                            </td>
+                                            <td className="border px-4 py-2 text-center">
+                                                {product.inStock ? "Yes" : "No"}
+                                            </td>
+                                            <td className="border px-4 py-2 text-center cursor-pointer">
+                                                <button
+                                                    onClick={() =>
+                                                        handleEditProduct(
+                                                            product
+                                                        )
+                                                    }
+                                                    className="mr-2"
+                                                >
+                                                    <PencilIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
+                                                </button>
+                                            </td>
+                                            <td className="border px-4 py-2 text-center cursor-pointer">
+                                                <button>
+                                                    <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </>
+            {/* Modal */}
+            {isModalOpen && (
+                <div className="fixed z-10 inset-0 overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-screen">
+                        <div className="bg-slate-800 p-6 rounded-lg shadow-xl">
+                            <h2 className="text-2xl text-white font-semibold mb-4">
+                                {isEditing ? "Edit Product" : "Add New Product"}
+                            </h2>
+                            <div className="mb-4">
+                                <label className="block text-white  text-sm font-semibold mb-2">
+                                    Name:
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={productToEdit.name}
+                                    onChange={handleInputChange}
+                                    className="border bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-white text-sm font-semibold mb-2">
+                                    Description:
+                                </label>
+                                <textarea
+                                    name="description"
+                                    value={productToEdit.description}
+                                    onChange={handleInputChange}
+                                    className="border bg-slate-800 rounded-md px-3 py-2 w-full h-32 resize-none focus:outline-none focus:ring focus:border-slate-400"
+                                ></textarea>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-white text-sm font-semibold mb-2">
+                                    Image:
+                                </label>
+                                <input
+                                    type="file"
+                                    name="image"
+                                    accept="image/*" // Restrict to image files
+                                    onChange={(e) => handleImageUpload(e)}
+                                    className="border bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
+                                />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-white text-sm font-semibold mb-2">
+                                    Price:
+                                </label>
+                                <input
+                                    type="text"
+                                    name="price"
+                                    value={productToEdit.price}
+                                    onChange={handleInputChange}
+                                    className="border bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
+                                />
+                            </div>
+                            <div className=" py-4">
+                                <button
+                                    onClick={
+                                        isEditing
+                                            ? handleEditProduct
+                                            : handleAddProduct
+                                    }
+                                    className="btn w-full mb-4 bg-white text-slate-800 hover:bg-slate-400"
+                                >
+                                    {isEditing ? "Save Changes" : "Add Product"}
+                                </button>
+
+                                <button
+                                    onClick={closeModal}
+                                    className="btn w-full bg-slate-800 text-white border hover:bg-gray-300 "
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* End Modal */}
+        </BasicLayout>
+    );
 };
 
-const Store: FC<SubcriptionsProps> = () => {
-  const [rowId, setRowId] = useState<string>("");
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [showItems, setShowItems] = useState<boolean>(false);
-  const [showForm, setShowForm] = useState<boolean>(false);
-  const [subscription, setSubcription] =
-    useState<TSubcription>(initialSubState);
-  const api = useApi();
-  const store = useStore();
-
-  function openForm() {
-    setIsOpen(true);
-  }
-
-  function closeForm() {
-    setIsOpen(false);
-  }
-
-  async function fetchAllSubcriptions() {
-    api.startLoading();
-    try {
-      const allSubscriptions = await getAllSubscriptions();
-      store.actions.setSubcriptions(allSubscriptions);
-      api.setSuccess();
-    } catch (error) {
-      const { response } = error as any;
-      console.log(error);
-      api.setError();
-      api.setResponseMessage(response?.data?.message);
-      store.actions.resetSubcriptions();
-    } finally {
-      api.stopLoading();
-    }
-  }
-
-  useEffect(() => {
-    fetchAllSubcriptions();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  // columns
-  const columns: GridColDef[] = useMemo(
-    () => [
-      { field: "_id", headerName: "ID", width: 90 },
-      {
-        field: "title",
-        headerName: "Title",
-        width: 150,
-      },
-      {
-        field: "validity",
-        headerName: "Validity",
-        width: 110,
-      },
-      {
-        field: "price",
-        headerName: "Price",
-        width: 120,
-      },
-      {
-        field: "compare_price",
-        headerName: "Compare Price",
-        width: 120,
-      },
-      {
-        field: "no_of_reminder",
-        headerName: "No Of Reminder",
-        width: 130,
-      },
-      {
-        field: "status",
-        headerName: "Status",
-        type: "boolean",
-        width: 110,
-        editable: true,
-      },
-      {
-        field: "edit",
-        headerName: "Edit",
-        width: 100,
-        sortable: false,
-        filterable: false,
-        disableColumnMenu: true,
-        renderCell: (params) => {
-          return (
-            <>
-              <EditAction
-                {...{
-                  params,
-                  rowId,
-                  setRowId,
-                  setSubcription,
-                  handelShowForm: setShowForm,
-                }}
-              />
-            </>
-          );
-        },
-      },
-      {
-        field: "delete",
-        headerName: "Delete",
-        width: 100,
-        sortable: false,
-        filterable: false,
-        disableColumnMenu: true,
-        renderCell: (params) => {
-          return (
-            <>
-              <EditAction
-                {...{
-                  params,
-                  rowId,
-                  setRowId,
-                  setSubcription,
-                  handelShowForm: setShowForm,
-                }}
-              />
-            </>
-          );
-        },
-      },
-    ],
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rowId]
-  );
-
-  const rows = store.subscrptionManagement.subscriptions;
-  return (
-    <BasicLayout>
-      {/* add new faq */}
-      <div aria-label="add a faq" className="py-4 mb-4 space-y-4 max-w-2xl">
-        <h2 className="">All items</h2>
-        {/* add button */}
-        <button
-          onClick={openForm}
-          className="btn text-white bg-slate-800 hover:bg-slate-700"
-        >
-          Add a new item
-        </button>
-        {/* popup form */}
-        <Dialog open={isOpen} onClose={closeForm}>
-          <div className="bg-slate-800 text-white ">
-            <DialogTitle>
-              <h2 className="text-white">Add new Subscription</h2>
-            </DialogTitle>
-            <DialogContent className="">
-              <SubscriptionForm handleClose={closeForm} />
-            </DialogContent>
-          </div>
-        </Dialog>
-        {showForm && (
-          <Dialog open={showForm} onClose={closeForm}>
-            <div className="bg-slate-800 text-white ">
-              <DialogTitle>
-                <h2 className="text-white">Add new Subscription</h2>
-              </DialogTitle>
-              <DialogContent className="">
-                <EditSubscriptionForm
-                  handleClose={setShowForm}
-                  subscription={subscription}
-                />
-              </DialogContent>
-            </div>
-          </Dialog>
-        )}
-      </div>
-      <Box sx={{ height: 400, width: "100%" }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          getRowId={(row) => row._id}
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 5,
-              },
-            },
-          }}
-          pageSizeOptions={[5, 10, 15]}
-          disableRowSelectionOnClick
-          onCellEditStop={(params) => setRowId(params.id as string)}
-        />
-      </Box>
-    </BasicLayout>
-  );
-};
-
-export default Store;
+export default ProductsPage;
