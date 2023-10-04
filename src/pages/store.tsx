@@ -20,6 +20,7 @@ const ProductsPage: React.FC = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [currentEditId, setCurrentEditId] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -81,6 +82,10 @@ const ProductsPage: React.FC = () => {
   };
 
   const openModal = () => {
+    setName("");
+    setDescription("");
+    setPrice("");
+
     setIsModalOpen(true);
     setIsEditing(false);
     setProductToEdit({
@@ -110,7 +115,30 @@ const ProductsPage: React.FC = () => {
       reader.readAsDataURL(file);
     }
   };
-  const handleEditProduct = async () => {};
+
+  const handleEditProduct = async () => {
+    //after clicking save changes button
+    const token = getAdminToken();
+    try {
+      const response = await axios.patch(
+        API_BASE_URL + `/api/product/` + currentEditId,
+        {
+          name,
+          description,
+          price,
+        },
+        {
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        }
+      );
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
+
   const handleAddProduct = async () => {
     const token = getAdminToken();
     try {
@@ -138,18 +166,28 @@ const ProductsPage: React.FC = () => {
     }
   };
 
-  const openEditProductModal = (productId: string) => {
+  const openEditProductModal = (
+    productId: string,
+    productName: string,
+    productDesc: string,
+    productPrice: string
+  ) => {
+    setCurrentEditId(productId);
+    setName(productName);
+    setDescription(productDesc);
+    setPrice(productPrice);
+
+    setProductToEdit({
+      _id: "",
+      name: productName,
+      description: productDesc,
+      image: "",
+      price: productPrice,
+      inStock: false,
+    });
     console.log("handleEditProduct", productId);
     setIsModalOpen(true);
     setIsEditing(true);
-    setProductToEdit({
-      _id: "",
-      name: "",
-      description: "",
-      image: "",
-      price: "",
-      inStock: false,
-    });
 
     const { _id, ...updatedData } = productToEdit;
     updateProduct(_id, updatedData);
@@ -218,7 +256,14 @@ const ProductsPage: React.FC = () => {
                       </td>
                       <td className="border px-4 py-2 text-center cursor-pointer">
                         <button
-                          onClick={() => openEditProductModal(product._id)}
+                          onClick={() =>
+                            openEditProductModal(
+                              product._id,
+                              product.name,
+                              product.description,
+                              product.price
+                            )
+                          }
                           className="mr-2"
                         >
                           <PencilIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
