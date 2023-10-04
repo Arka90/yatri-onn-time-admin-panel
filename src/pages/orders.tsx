@@ -31,13 +31,13 @@ const OrdersPage: React.FC = () => {
           Authorization: "Bearer " + token,
         },
       });
-      console.log(response.data.data);
       setOrders(response.data.data);
     } catch (error) {
       console.error("Error fetching orders:", error);
     }
   };
-  const deleteOrder = async (orderId: string) => {
+
+  const handleDeleteOrder = async (orderId: string) => {
     const token = getAdminToken();
     try {
       const response = await axios.delete<Order>(
@@ -48,21 +48,29 @@ const OrdersPage: React.FC = () => {
           },
         }
       );
-      //fetch again
+      // Fetch again after deletion
       fetchOrders();
     } catch (error) {
       console.log("error", error);
     }
   };
 
-  const updateOrder = async (
-    productId: string,
-    updatedProductData: Partial<Order>
-  ) => {};
-
-  const handleDeleteOrder = (orderId: string) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      deleteOrder(orderId);
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    console.log("update order status===");
+    const token = getAdminToken();
+    try {
+      const response = await axios.patch(
+        API_BASE_URL + `/api/order/` + orderId,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        }
+      );
+      fetchOrders();
+    } catch (error) {
+      console.log("error", error);
     }
   };
 
@@ -84,7 +92,7 @@ const OrdersPage: React.FC = () => {
                     <th className="border px-4 py-2">Product</th>
                     <th className="border px-4 py-2">Status</th>
                     <th className="border px-4 py-2">User</th>
-                    <th className="border px-4 py-2">Delete</th>
+                    <th className="border px-4 py-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -100,12 +108,28 @@ const OrdersPage: React.FC = () => {
                         {order.product}
                       </td>
                       <td className="border px-4 py-2 text-center">
-                        {order.status}
+                        <select
+                          value={order.status}
+                          onChange={(e) =>
+                            updateOrderStatus(order._id, e.target.value)
+                          }
+                        >
+                          {[
+                            "pending",
+                            "in_progress",
+                            "out_for_delivery",
+                            "delivered",
+                          ].map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
                       </td>
                       <td className="border px-4 py-2 text-center">
                         {order.user}
                       </td>
-                      <td className="border px-4 py-2 text-center cursor-pointer">
+                      <td className="border px-4 py-2 text-center">
                         <button onClick={() => handleDeleteOrder(order._id)}>
                           <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
                         </button>
