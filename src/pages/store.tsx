@@ -110,7 +110,7 @@ const ProductsPage: React.FC = () => {
       reader.readAsDataURL(file);
     }
   };
-
+  const handleEditProduct = async () => {};
   const handleAddProduct = async () => {
     const token = getAdminToken();
     try {
@@ -138,10 +138,21 @@ const ProductsPage: React.FC = () => {
     }
   };
 
-  const handleEditProduct = () => {
+  const openEditProductModal = (productId: string) => {
+    console.log("handleEditProduct", productId);
+    setIsModalOpen(true);
+    setIsEditing(true);
+    setProductToEdit({
+      _id: "",
+      name: "",
+      description: "",
+      image: "",
+      price: "",
+      inStock: false,
+    });
+
     const { _id, ...updatedData } = productToEdit;
     updateProduct(_id, updatedData);
-    closeModal();
   };
 
   const handleDeleteProduct = (productId: string) => {
@@ -207,7 +218,7 @@ const ProductsPage: React.FC = () => {
                       </td>
                       <td className="border px-4 py-2 text-center cursor-pointer">
                         <button
-                          onClick={() => handleEditProduct()}
+                          onClick={() => openEditProductModal(product._id)}
                           className="mr-2"
                         >
                           <PencilIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
