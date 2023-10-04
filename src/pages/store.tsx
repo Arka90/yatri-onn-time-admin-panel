@@ -23,7 +23,7 @@ const ProductsPage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [productToEdit, setProductToEdit] = useState<Product>({
     _id: "",
@@ -42,15 +42,18 @@ const ProductsPage: React.FC = () => {
   const fetchProducts = async () => {
     const token = getAdminToken();
     try {
-      const response = await axios.get(API_BASE_URL + `/api/product`, {
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      });
+      const response = await axios.get<Product[]>(
+        API_BASE_URL + `/api/product`,
+        {
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        }
+      );
       console.log(response.data);
       setProducts(response.data);
     } catch (error) {
-      console.error("Error adding product:", error);
+      console.error("Error fetching products:", error);
     }
   };
 
@@ -100,17 +103,16 @@ const ProductsPage: React.FC = () => {
     const token = getAdminToken();
     try {
       const response = await axios.post<Product>(
-        `http://ec2-52-207-129-114.compute-1.amazonaws.com:3100/api/product`,
+        API_BASE_URL + `/api/product`,
         {
           name,
           description,
           price,
-          image: "productToEdit.image",
+          image: productToEdit.image,
         },
         {
           headers: {
-            Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDc4NmQ4Y2FmY2RmM2Q1NTY2NzRjZTkiLCJlbWFpbCI6InNiLmFzc29jaWF0ZXMxMTAxQGdtYWlsLmNvbSIsImlzQWRtaW4iOnRydWUsImlhdCI6MTY5NjQxNDg2NiwiZXhwIjoxNjk5MDA2ODY2fQ.vntiDw4r6oUPwBLxBfzku2jUxO1IfKdOypqHXd5-nIw",
+            Authorization: "Bearer " + token,
           },
         }
       );
@@ -188,7 +190,6 @@ const ProductsPage: React.FC = () => {
                       <td className="border px-4 py-2 text-center">
                         {product.price}
                       </td>
-
                       <td className="border px-4 py-2 text-center">
                         {product.inStock ? "Yes" : "No"}
                       </td>
