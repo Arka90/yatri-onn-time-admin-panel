@@ -7,7 +7,7 @@ import getAdminToken from "@/lib/utils/getAdminToken";
 const API_BASE_URL: string | undefined =
   "http://ec2-52-207-129-114.compute-1.amazonaws.com:3100";
 
-interface Product {
+interface Order {
   address: string;
   price: string;
   product: string;
@@ -23,9 +23,9 @@ const OrdersPage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  const [productToEdit, setProductToEdit] = useState<Product>({
+  const [orderToEdit, setOrderToEdit] = useState<Order>({
     address: "",
     price: "",
     product: "",
@@ -49,15 +49,15 @@ const OrdersPage: React.FC = () => {
         },
       });
       console.log(response.data.data);
-      setProducts(response.data.data);
+      setOrders(response.data.data);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching orders:", error);
     }
   };
 
   const updateProduct = async (
     productId: string,
-    updatedProductData: Partial<Product>
+    updatedProductData: Partial<Order>
   ) => {};
 
   const deleteProduct = async (productId: string) => {
@@ -93,7 +93,7 @@ const OrdersPage: React.FC = () => {
   };
 
   const handleEditProduct = () => {
-    const { _id, ...updatedData } = productToEdit;
+    const { _id, ...updatedData } = orderToEdit;
     updateProduct(_id, updatedData);
     closeModal();
   };
@@ -117,31 +117,32 @@ const OrdersPage: React.FC = () => {
               <table className="w-full table-auto" style={{ width: "80vw" }}>
                 <thead>
                   <tr>
-                    <th className="border px-4 py-2">address</th>
-                    <th className="border px-4 py-2">price</th>
-                    <th className="border px-4 py-2">product</th>
-                    <th className="border px-4 py-2">status</th>
-                    <th className="border px-4 py-2">user</th>
-                    <th className="border px-4 py-2">_id</th>
+                    <th className="border px-4 py-2">Address</th>
+                    <th className="border px-4 py-2">Price</th>
+                    <th className="border px-4 py-2">Product</th>
+                    <th className="border px-4 py-2">Status</th>
+                    <th className="border px-4 py-2">User</th>
+                    <th className="border px-4 py-2">Id</th>
+                    <th className="border px-4 py-2">Delete</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
-                    <tr key={product._id}>
+                  {orders.map((order) => (
+                    <tr key={order._id}>
                       <td className="border px-4 py-2 text-center">
-                        {product.address}
+                        {order.address}
                       </td>
                       <td className="border px-4 py-2 text-center">
-                        {product.price}
+                        {order.price}
                       </td>
                       <td className="border px-4 py-2 text-center">
-                        {product.product}
+                        {order.product}
                       </td>
                       <td className="border px-4 py-2 text-center">
-                        {product.status}
+                        {order.status}
                       </td>
                       <td className="border px-4 py-2 text-center">
-                        {product.user}
+                        {order.user}
                       </td>
                       <td className="border px-4 py-2 text-center cursor-pointer">
                         <button
@@ -152,9 +153,7 @@ const OrdersPage: React.FC = () => {
                         </button>
                       </td>
                       <td className="border px-4 py-2 text-center cursor-pointer">
-                        <button
-                          onClick={() => handleDeleteProduct(product._id)}
-                        >
+                        <button onClick={() => handleDeleteProduct(order._id)}>
                           <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
                         </button>
                       </td>
