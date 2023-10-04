@@ -1,42 +1,110 @@
 import BasicLayout from "@/layout/basicLayout";
-import { useState } from "react";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid"; // Import Heroicons icons // Import Heroicons icons
+import { useState, useEffect } from "react";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import axios from "axios";
+
+// Define your API base URL
+const API_BASE_URL: string | undefined = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+// Define your product interface
+interface Product {
+    _id: string;
+    name: string;
+    description: string;
+    image: string;
+    price: string;
+    inStock: boolean;
+}
 
 const ProductsPage: React.FC = () => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isEditing, setIsEditing] = useState(false); // Track whether we're in edit mode
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
+    const [price, setPrice] = useState("");
 
-    // State for new/edit product fields
-    const [productToEdit, setProductToEdit] = useState({
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [products, setProducts] = useState<Product[]>([]);
+
+    const [productToEdit, setProductToEdit] = useState<Product>({
         _id: "",
         name: "",
         description: "",
         image: "",
         price: "",
+        inStock: false,
     });
 
-    const products: storeTypes[] = [
-        {
-            _id: "651cf6aaa46049907e6229f8",
-            name: "New Shirt",
-            description: "New Description............",
-            price: "599",
-            image: "https://yatri-onn-time-storage.s3.ap-southeast-1.amazonaws.com/a4cc6b60dcee4a49de8eb4c3189da692",
-            inStock: true,
-        },
-        // Add more products here if needed
-    ];
+    useEffect(() => {
+        // Fetch products from your backend when the component mounts
+        fetchProducts();
+    }, []);
+
+    const fetchProducts = async () => {
+        try {
+            const response = await axios.get<Product[]>(
+                `${API_BASE_URL}/api/products`
+            );
+            setProducts(response.data);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        }
+    };
+
+    const createProduct = async (
+        name: string,
+        description: string,
+        price: string,
+        image: string
+    ) => {
+        try {
+            const response = await axios.post(
+                `${API_BASE_URL}/api/products`,
+                (name = name)
+            );
+            console.log("Response from createProduct:", response);
+            // Fetch products again after creating a new product
+            fetchProducts();
+        } catch (error) {
+            console.error("Error creating product:", error);
+        }
+    };
+
+    const updateProduct = async (
+        productId: string,
+        updatedProductData: Partial<Product>
+    ) => {
+        try {
+            await axios.put(
+                `${API_BASE_URL}/api/products/${productId}`,
+                updatedProductData
+            );
+            // Fetch products again after updating
+            fetchProducts();
+        } catch (error) {
+            console.error("Error updating product:", error);
+        }
+    };
+
+    const deleteProduct = async (productId: string) => {
+        try {
+            await axios.delete(`${API_BASE_URL}/api/products/${productId}`);
+            // Fetch products again after deleting
+            fetchProducts();
+        } catch (error) {
+            console.error("Error deleting product:", error);
+        }
+    };
 
     const openModal = () => {
         setIsModalOpen(true);
-        setIsEditing(false); // Reset to add mode
-        // Clear the productToEdit state
+        setIsEditing(false);
         setProductToEdit({
             _id: "",
             name: "",
             description: "",
             image: "",
             price: "",
+            inStock: false,
         });
     };
 
@@ -44,19 +112,17 @@ const ProductsPage: React.FC = () => {
         setIsModalOpen(false);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setProductToEdit({
-            ...productToEdit,
-            [name]: value,
-        });
-    };
+    // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const { name, value } = e.target;
+    //     setProductToEdit({
+    //         ...productToEdit,
+    //         [name]: value,
+    //     });
+    // };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]; // Get the selected file
-
+        const file = e.target.files?.[0];
         if (file) {
-            // Read the selected file as a data URL
             const reader = new FileReader();
             reader.onloadend = () => {
                 setProductToEdit({
@@ -69,18 +135,20 @@ const ProductsPage: React.FC = () => {
     };
 
     const handleAddProduct = () => {
-        // Add your logic here to save the new product to your data source
-        console.log("New Product:", productToEdit);
-
-        // Close the modal
+        createProduct(name, description, price);
         closeModal();
     };
 
-    const handleEditProduct = (product: storeTypes) => {
-        // Set the productToEdit state with the data of the product being edited
-        setProductToEdit(product);
-        setIsEditing(true); // Switch to edit mode
-        setIsModalOpen(true); // Open the modal
+    const handleEditProduct = () => {
+        const { _id, ...updatedData } = productToEdit;
+        updateProduct(_id, updatedData);
+        closeModal();
+    };
+
+    const handleDeleteProduct = (productId: string) => {
+        if (window.confirm("Are you sure you want to delete this product?")) {
+            deleteProduct(productId);
+        }
     };
 
     return (
@@ -122,8 +190,7 @@ const ProductsPage: React.FC = () => {
                                         </th>
                                         <th className="border px-4 py-2">
                                             Edit
-                                        </th>{" "}
-                                        {/* New column for actions */}
+                                        </th>
                                         <th className="border px-4 py-2">
                                             Delete
                                         </th>
@@ -169,7 +236,13 @@ const ProductsPage: React.FC = () => {
                                                 </button>
                                             </td>
                                             <td className="border px-4 py-2 text-center cursor-pointer">
-                                                <button>
+                                                <button
+                                                    onClick={() =>
+                                                        handleDeleteProduct(
+                                                            product._id
+                                                        )
+                                                    }
+                                                >
                                                     <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
                                                 </button>
                                             </td>
@@ -196,9 +269,11 @@ const ProductsPage: React.FC = () => {
                                 <input
                                     type="text"
                                     name="name"
-                                    value={productToEdit.name}
-                                    onChange={handleInputChange}
-                                    className="border bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
+                                    value={name}
+                                    onChange={(e) => {
+                                        setName(e.target.value);
+                                    }}
+                                    className="border text-white bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
                                 />
                             </div>
                             <div className="mb-4">
@@ -207,9 +282,11 @@ const ProductsPage: React.FC = () => {
                                 </label>
                                 <textarea
                                     name="description"
-                                    value={productToEdit.description}
-                                    onChange={handleInputChange}
-                                    className="border bg-slate-800 rounded-md px-3 py-2 w-full h-32 resize-none focus:outline-none focus:ring focus:border-slate-400"
+                                    value={description}
+                                    onChange={(e) => {
+                                        setDescription(e.target.value);
+                                    }}
+                                    className="border text-white bg-slate-800 rounded-md px-3 py-2 w-full h-32 resize-none focus:outline-none focus:ring focus:border-slate-400"
                                 ></textarea>
                             </div>
                             <div className="mb-4">
@@ -219,12 +296,11 @@ const ProductsPage: React.FC = () => {
                                 <input
                                     type="file"
                                     name="image"
-                                    accept="image/*" // Restrict to image files
-                                    onChange={(e) => handleImageUpload(e)}
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
                                     className="border bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
                                 />
                             </div>
-
                             <div className="mb-4">
                                 <label className="block text-white text-sm font-semibold mb-2">
                                     Price:
@@ -232,9 +308,11 @@ const ProductsPage: React.FC = () => {
                                 <input
                                     type="text"
                                     name="price"
-                                    value={productToEdit.price}
-                                    onChange={handleInputChange}
-                                    className="border bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
+                                    value={price}
+                                    onChange={(e) => {
+                                        setPrice(e.target.value);
+                                    }}
+                                    className="border text-white bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
                                 />
                             </div>
                             <div className=" py-4">
@@ -248,10 +326,9 @@ const ProductsPage: React.FC = () => {
                                 >
                                     {isEditing ? "Save Changes" : "Add Product"}
                                 </button>
-
                                 <button
                                     onClick={closeModal}
-                                    className="btn w-full bg-slate-800 text-white border hover:bg-gray-300 "
+                                    className="btn w-full bg-slate-800 text-white border hover:bg-gray-300"
                                 >
                                     Cancel
                                 </button>
