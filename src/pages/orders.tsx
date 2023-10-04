@@ -60,11 +60,11 @@ const OrdersPage: React.FC = () => {
     updatedProductData: Partial<Order>
   ) => {};
 
-  const deleteProduct = async (productId: string) => {
+  const deleteOrder = async (orderId: string) => {
     const token = getAdminToken();
     try {
-      const response = await axios.delete<Product>(
-        API_BASE_URL + `/api/product/` + productId,
+      const response = await axios.delete<Order>(
+        API_BASE_URL + `/api/order/` + orderId,
         {
           headers: {
             Authorization: "Bearer " + token,
@@ -98,9 +98,9 @@ const OrdersPage: React.FC = () => {
     closeModal();
   };
 
-  const handleDeleteProduct = (productId: string) => {
+  const handleDeleteOrder = (orderId: string) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
-      deleteProduct(productId);
+      deleteOrder(orderId);
     }
   };
 
@@ -153,7 +153,7 @@ const OrdersPage: React.FC = () => {
                         </button>
                       </td>
                       <td className="border px-4 py-2 text-center cursor-pointer">
-                        <button onClick={() => handleDeleteProduct(order._id)}>
+                        <button onClick={() => handleDeleteOrder(order._id)}>
                           <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
                         </button>
                       </td>
