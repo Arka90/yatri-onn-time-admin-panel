@@ -60,12 +60,24 @@ const ProductsPage: React.FC = () => {
   const updateProduct = async (
     productId: string,
     updatedProductData: Partial<Product>
-  ) => {
-    // Implement the updateProduct function as needed
-  };
+  ) => {};
 
   const deleteProduct = async (productId: string) => {
-    // Implement the deleteProduct function as needed
+    const token = getAdminToken();
+    try {
+      const response = await axios.delete<Product>(
+        API_BASE_URL + `/api/product/` + productId,
+        {
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        }
+      );
+      //fetch again
+      fetchProducts();
+    } catch (error) {
+      console.log("error", error);
+    }
   };
 
   const openModal = () => {
