@@ -87,25 +87,28 @@ const OrdersPage: React.FC = () => {
               <table className="w-full table-auto" style={{ width: "80vw" }}>
                 <thead>
                   <tr>
+                    <th className="border px-4 py-2">User</th>
+                    <th className="border px-4 py-2">Product</th>
                     <th className="border px-4 py-2">Address</th>
                     <th className="border px-4 py-2">Price</th>
-                    <th className="border px-4 py-2">Product</th>
                     <th className="border px-4 py-2">Status</th>
-                    <th className="border px-4 py-2">User</th>
-                    <th className="border px-4 py-2">Actions</th>
+                    <th className="border px-4 py-2">Delete</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.map((order) => (
                     <tr key={order._id}>
                       <td className="border px-4 py-2 text-center">
+                        {order.user}
+                      </td>
+                      <td className="border px-4 py-2 text-center">
+                        {order.product}
+                      </td>
+                      <td className="border px-4 py-2 text-center">
                         {order.address}
                       </td>
                       <td className="border px-4 py-2 text-center">
                         {order.price}
-                      </td>
-                      <td className="border px-4 py-2 text-center">
-                        {order.product}
                       </td>
                       <td className="border px-4 py-2 text-center">
                         <select
@@ -126,9 +129,7 @@ const OrdersPage: React.FC = () => {
                           ))}
                         </select>
                       </td>
-                      <td className="border px-4 py-2 text-center">
-                        {order.user}
-                      </td>
+
                       <td className="border px-4 py-2 text-center">
                         <button onClick={() => handleDeleteOrder(order._id)}>
                           <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
