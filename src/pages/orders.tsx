@@ -1,157 +1,251 @@
-import DeleteAction from "@/components/actions/deleteAction";
-import EditAction from "@/components/actions/editAction";
-import EditSubscriptionForm from "@/components/forms/editSubscriptionForm";
-import SubscriptionForm from "@/components/forms/subscriptionForm";
-import useApi from "@/hooks/userApi";
+import React, { useState, useEffect } from "react";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import axios from "axios";
 import BasicLayout from "@/layout/basicLayout";
-import deleteSubcriptionById from "@/lib/subscriptions/deleteSubscription";
-import getAllSubscriptions from "@/lib/subscriptions/getAllSubscriptions";
-import useStore from "@/store";
-import { TSubcription } from "@/types/subcriptions";
-import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import moment from "moment";
-import { FC, useEffect, useMemo, useState } from "react";
+import getAdminToken from "@/lib/utils/getAdminToken";
 
-type SubcriptionsProps = {};
+const API_BASE_URL: string | undefined =
+  "http://ec2-52-207-129-114.compute-1.amazonaws.com:3100";
 
-const initialSubState: TSubcription = {
-  _id: "",
-  title: "",
-  validity: 0,
-  price: 0,
-  compare_price: 0,
-  no_of_reminder: 0,
-  status: false,
-};
+interface Product {
+  address: string;
+  price: string;
+  product: string;
+  status: string;
+  user: string;
+  _id: string;
+}
 
-const Order: FC<SubcriptionsProps> = () => {
-  const [rowId, setRowId] = useState<string>("");
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [showItems, setShowItems] = useState<boolean>(false);
-  const [showForm, setShowForm] = useState<boolean>(false);
-  const [subscription, setSubcription] =
-    useState<TSubcription>(initialSubState);
-  const api = useApi();
-  const store = useStore();
+const OrdersPage: React.FC = () => {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
 
-  function openForm() {
-    setIsOpen(true);
-  }
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  function closeForm() {
-    setIsOpen(false);
-  }
-  function handleStoreItems() {
-    setShowItems(true);
-  }
-  function handleEditItems() {
-    setShowItems(false);
-  }
+  const [productToEdit, setProductToEdit] = useState<Product>({
+    address: "",
+    price: "",
+    product: "",
+    status: "",
+    user: "",
 
-  async function fetchAllSubcriptions() {
-    api.startLoading();
-    try {
-      const allSubscriptions = await getAllSubscriptions();
-      store.actions.setSubcriptions(allSubscriptions);
-      api.setSuccess();
-    } catch (error) {
-      const { response } = error as any;
-      console.log(error);
-      api.setError();
-      api.setResponseMessage(response?.data?.message);
-      store.actions.resetSubcriptions();
-    } finally {
-      api.stopLoading();
-    }
-  }
+    _id: "",
+  });
 
   useEffect(() => {
-    fetchAllSubcriptions();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const token = getAdminToken();
+    fetchOrders();
   }, []);
-  // columns
-  const columns: GridColDef[] = useMemo(
-    () => [
-      { field: "_id", headerName: "ID", width: 90 },
-      {
-        field: "title",
-        headerName: "Title",
-        width: 150,
-      },
-      {
-        field: "validity",
-        headerName: "Validity",
-        width: 110,
-      },
-      {
-        field: "price",
-        headerName: "Price",
-        width: 120,
-      },
-      {
-        field: "compare_price",
-        headerName: "Compare Price",
-        width: 120,
-      },
-      {
-        field: "no_of_reminder",
-        headerName: "No Of Reminder",
-        width: 130,
-      },
-      {
-        field: "status",
-        headerName: "Status",
-        type: "boolean",
-        width: 110,
-        editable: true,
-      },
-      {
-        field: "actions",
-        headerName: "Actions",
-        width: 250,
-        sortable: false,
-        filterable: false,
-        disableColumnMenu: true,
-        renderCell: (params) => {
-          return (
-            <>
-              <EditAction
-                {...{
-                  params,
-                  rowId,
-                  setRowId,
-                  setSubcription,
-                  handelShowForm: setShowForm,
-                }}
-              />
-            </>
-          );
+
+  const fetchOrders = async () => {
+    const token = getAdminToken();
+    try {
+      const response = await axios.get(API_BASE_URL + `/api/order/all`, {
+        headers: {
+          Authorization: "Bearer " + token,
         },
-      },
-    ],
+      });
+      console.log(response.data.data);
+      setProducts(response.data.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [rowId]
-  );
+  const updateProduct = async (
+    productId: string,
+    updatedProductData: Partial<Product>
+  ) => {};
 
-  const rows = store.subscrptionManagement.subscriptions;
+  const deleteProduct = async (productId: string) => {
+    const token = getAdminToken();
+    try {
+      const response = await axios.delete<Product>(
+        API_BASE_URL + `/api/product/` + productId,
+        {
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        }
+      );
+      //fetch again
+      fetchOrders();
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {};
+
+  const handleAddProduct = async () => {
+    const token = getAdminToken();
+    try {
+    } catch (error) {
+      console.error("Error adding product:", error);
+    }
+  };
+
+  const handleEditProduct = () => {
+    const { _id, ...updatedData } = productToEdit;
+    updateProduct(_id, updatedData);
+    closeModal();
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      deleteProduct(productId);
+    }
+  };
+
   return (
     <BasicLayout>
       <>
-        <div className=" font-semibold text-4xl text-slate-800 mb-4">
-          Manage orders
+        <div className="font-semibold text-4xl text-slate-800 mb-6">
+          Order details
         </div>
-        <div className="col-span-2 card h-fit">
-          <div className="">
-            <h3 className="font-medium text-slate-800 text-2xl"></h3>
-            <div className="flex items-center justify-around"></div>
+
+        <div className="col-span-2 card h-fit my-5">
+          <div className="flex items-center justify-around">
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto" style={{ width: "80vw" }}>
+                <thead>
+                  <tr>
+                    <th className="border px-4 py-2">address</th>
+                    <th className="border px-4 py-2">price</th>
+                    <th className="border px-4 py-2">product</th>
+                    <th className="border px-4 py-2">status</th>
+                    <th className="border px-4 py-2">user</th>
+                    <th className="border px-4 py-2">_id</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.map((product) => (
+                    <tr key={product._id}>
+                      <td className="border px-4 py-2 text-center">
+                        {product.address}
+                      </td>
+                      <td className="border px-4 py-2 text-center">
+                        {product.price}
+                      </td>
+                      <td className="border px-4 py-2 text-center">
+                        {product.product}
+                      </td>
+                      <td className="border px-4 py-2 text-center">
+                        {product.status}
+                      </td>
+                      <td className="border px-4 py-2 text-center">
+                        {product.user}
+                      </td>
+                      <td className="border px-4 py-2 text-center cursor-pointer">
+                        <button
+                          onClick={() => handleEditProduct()}
+                          className="mr-2"
+                        >
+                          <PencilIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
+                        </button>
+                      </td>
+                      <td className="border px-4 py-2 text-center cursor-pointer">
+                        <button
+                          onClick={() => handleDeleteProduct(product._id)}
+                        >
+                          <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </>
+      {isModalOpen && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="bg-slate-800 p-6 rounded-lg shadow-xl">
+              <h2 className="text-2xl text-white font-semibold mb-4">
+                {isEditing ? "Edit Product" : "Add New Product"}
+              </h2>
+              <div className="mb-4">
+                <label className="block text-white  text-sm font-semibold mb-2">
+                  Name:
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                  }}
+                  className="border text-white bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-white text-sm font-semibold mb-2">
+                  Description:
+                </label>
+                <textarea
+                  name="description"
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                  }}
+                  className="border text-white bg-slate-800 rounded-md px-3 py-2 w-full h-32 resize-none focus:outline-none focus:ring focus:border-slate-400"
+                ></textarea>
+              </div>
+              <div className="mb-4">
+                <label className="block text-white text-sm font-semibold mb-2">
+                  Image:
+                </label>
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="border bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-white text-sm font-semibold mb-2">
+                  Price:
+                </label>
+                <input
+                  type="text"
+                  name="price"
+                  value={price}
+                  onChange={(e) => {
+                    setPrice(e.target.value);
+                  }}
+                  className="border text-white bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
+                />
+              </div>
+              <div className=" py-4">
+                <button
+                  onClick={isEditing ? handleEditProduct : handleAddProduct}
+                  className="btn w-full mb-4 bg-white text-slate-800 hover:bg-slate-400"
+                >
+                  {isEditing ? "Save Changes" : "Add Product"}
+                </button>
+                <button
+                  onClick={closeModal}
+                  className="btn w-full bg-slate-800 text-white border hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </BasicLayout>
   );
 };
 
-export default Order;
+export default OrdersPage;
