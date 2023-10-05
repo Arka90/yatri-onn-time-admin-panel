@@ -27,6 +27,7 @@ const ProductsPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
   const [isEditLoading, setIsEditLoading] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
@@ -46,6 +47,7 @@ const ProductsPage: React.FC = () => {
   }, []);
 
   const fetchProducts = async () => {
+    setIsLoading(true);
     const token = getAdminToken();
     try {
       const response = await axios.get<Product[]>(
@@ -60,6 +62,8 @@ const ProductsPage: React.FC = () => {
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 

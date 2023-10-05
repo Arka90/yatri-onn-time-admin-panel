@@ -3,6 +3,7 @@ import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 import BasicLayout from "@/layout/basicLayout";
 import getAdminToken from "@/lib/utils/getAdminToken";
+import PulseLoader from "react-spinners/PulseLoader";
 
 const API_BASE_URL: string | undefined =
   "http://ec2-52-207-129-114.compute-1.amazonaws.com:3100";
@@ -28,12 +29,18 @@ const OrdersPage: React.FC = () => {
   const [selectedStatuses, setSelectedStatuses] = useState<{
     [orderId: string]: string;
   }>({});
+  const [isEditLoading, setIsEditLoading] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [currentEditId, setCurrentEditId] = useState("");
+  const [currentDeleteId, setCurrentDeleteId] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
   const fetchOrders = async () => {
+    setIsLoading(true);
     const token = getAdminToken();
     try {
       const response = await axios.get(API_BASE_URL + `/api/order/all`, {
@@ -44,10 +51,14 @@ const OrdersPage: React.FC = () => {
       setOrders(response.data.data);
     } catch (error) {
       console.error("Error fetching orders:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeleteOrder = async (orderId: string) => {
+    setCurrentDeleteId(orderId);
+    setIsDeleteLoading(true);
     const token = getAdminToken();
     try {
       const response = await axios.delete<Order>(
@@ -58,15 +69,19 @@ const OrdersPage: React.FC = () => {
           },
         }
       );
-
-      fetchOrders();
-      alert("Order deleted successfully.");
+      setIsDeleteLoading(false);
+      fetchOrders().then(() => {
+        alert("Order deleted successfully!");
+      });
     } catch (error) {
       console.log("error", error);
+      setIsDeleteLoading(false);
     }
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    setCurrentEditId(orderId);
+    setIsEditLoading(true);
     const token = getAdminToken();
     try {
       const response = await axios.patch(
@@ -78,11 +93,14 @@ const OrdersPage: React.FC = () => {
           },
         }
       );
-      fetchOrders();
-      alert("Order status updated successfully.");
+      setIsEditLoading(false);
+      fetchOrders().then(() => {
+        alert("Order status updated successfully!");
+      });
     } catch (error) {
       console.log("error", error);
       alert("Error updating order status. Please try again.");
+      setIsEditLoading(false);
     }
   };
 
@@ -106,7 +124,13 @@ const OrdersPage: React.FC = () => {
         <div className="font-semibold text-4xl text-slate-800 mb-6">
           Order details
         </div>
-
+        {isLoading ? (
+          <>
+            <PulseLoader color="#334155" />
+          </>
+        ) : (
+          <></>
+        )}
         <div className="col-span-2 card h-fit my-5">
           <div className="flex items-center justify-around">
             <div className="overflow-x-auto">
@@ -156,22 +180,42 @@ const OrdersPage: React.FC = () => {
                       </td>
 
                       <td className="border px-4 py-2 text-center">
-                        <button
-                          className="bg-slate-200 text-slate-600 rounded-md font-semibold"
-                          style={{
-                            height: "30px",
-                            width: "80px",
-                          }}
-                          onClick={() => handleUpdateStatus(order._id)}
-                        >
-                          Update
-                        </button>
+                        {isEditLoading && currentEditId === order._id ? (
+                          <>
+                            {" "}
+                            <PulseLoader color="#334155" size={10} />
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="bg-slate-200 text-slate-600 rounded-md font-semibold"
+                              style={{
+                                height: "30px",
+                                width: "80px",
+                              }}
+                              onClick={() => handleUpdateStatus(order._id)}
+                            >
+                              Update
+                            </button>
+                          </>
+                        )}
                       </td>
 
                       <td className="border px-4 py-2 text-center">
-                        <button onClick={() => handleDeleteOrder(order._id)}>
-                          <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
-                        </button>
+                        {isDeleteLoading && currentDeleteId === order._id ? (
+                          <>
+                            {" "}
+                            <PulseLoader color="#334155" size={10} />
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleDeleteOrder(order._id)}
+                            >
+                              <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
