@@ -21,6 +21,7 @@ const ProductsPage: React.FC = () => {
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState<number>(0);
     const [currentEditId, setCurrentEditId] = useState("");
+    const [inStock, setInStock] = useState(false);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -117,7 +118,6 @@ const ProductsPage: React.FC = () => {
     };
 
     const handleEditProduct = async () => {
-        //after clicking save changes button
         const token = getAdminToken();
         try {
             console.log(typeof price);
@@ -127,6 +127,7 @@ const ProductsPage: React.FC = () => {
                     name,
                     description,
                     price,
+                    inStock,
                 },
 
                 {
@@ -137,6 +138,7 @@ const ProductsPage: React.FC = () => {
             );
 
             fetchProducts();
+            console.log(inStock);
             closeModal();
         } catch (error) {
             console.error("Error fetching orders:", error);
@@ -153,6 +155,7 @@ const ProductsPage: React.FC = () => {
                     description,
                     price,
                     image: productToEdit.image,
+                    inStock,
                 },
                 {
                     headers: {
@@ -162,7 +165,6 @@ const ProductsPage: React.FC = () => {
                 }
             );
 
-            // Update the products list with the newly created product
             setProducts([...products, response.data]);
             fetchProducts();
             closeModal();
@@ -175,7 +177,8 @@ const ProductsPage: React.FC = () => {
         productId: string,
         productName: string,
         productDesc: string,
-        productPrice: number
+        productPrice: number,
+        productInstock: boolean
     ) => {
         setCurrentEditId(productId);
         setName(productName);
@@ -188,7 +191,7 @@ const ProductsPage: React.FC = () => {
             description: productDesc,
             image: "",
             price: productPrice,
-            inStock: false,
+            inStock: productInstock,
         });
         console.log("handleEditProduct", productId);
         setIsModalOpen(true);
@@ -283,7 +286,8 @@ const ProductsPage: React.FC = () => {
                                                             product._id,
                                                             product.name,
                                                             product.description,
-                                                            product.price
+                                                            product.price,
+                                                            product.inStock
                                                         )
                                                     }
                                                     className="mr-2"
@@ -370,6 +374,24 @@ const ProductsPage: React.FC = () => {
                                     className="border text-white bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
                                 />
                             </div>
+                            <div className="mb-4">
+                                <label className="block text-white text-sm font-semibold mb-2">
+                                    In Stock:
+                                </label>
+                                <input
+                                    type="checkbox"
+                                    name="inStock"
+                                    checked={inStock}
+                                    onChange={(e) => {
+                                        setInStock(e.target.checked);
+                                    }}
+                                    className="text-slate-800"
+                                />
+                                <p className="text-white text-sm mt-2">
+                                    {inStock ? "Yes" : "Out of Stock"}
+                                </p>
+                            </div>
+
                             <div className=" py-4">
                                 <button
                                     onClick={
