@@ -11,15 +11,15 @@ interface Product {
     _id: string;
     name: string;
     description: string;
-    image: string;
-    price: string;
+    image: any;
+    price: number;
     inStock: boolean;
 }
 
 const ProductsPage: React.FC = () => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [price, setPrice] = useState("");
+    const [price, setPrice] = useState<number>(0);
     const [currentEditId, setCurrentEditId] = useState("");
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,7 +31,7 @@ const ProductsPage: React.FC = () => {
         name: "",
         description: "",
         image: "",
-        price: "",
+        price: 0,
         inStock: false,
     });
 
@@ -84,7 +84,7 @@ const ProductsPage: React.FC = () => {
     const openModal = () => {
         setName("");
         setDescription("");
-        setPrice("");
+        setPrice(0);
 
         setIsModalOpen(true);
         setIsEditing(false);
@@ -93,7 +93,7 @@ const ProductsPage: React.FC = () => {
             name: "",
             description: "",
             image: "",
-            price: "",
+            price: 0,
             inStock: false,
         });
     };
@@ -109,7 +109,7 @@ const ProductsPage: React.FC = () => {
             reader.onloadend = () => {
                 setProductToEdit({
                     ...productToEdit,
-                    image: reader.result as string,
+                    image: file,
                 });
             };
             reader.readAsDataURL(file);
@@ -120,6 +120,7 @@ const ProductsPage: React.FC = () => {
         //after clicking save changes button
         const token = getAdminToken();
         try {
+            console.log(typeof price);
             const response = await axios.patch(
                 API_BASE_URL + `/api/product/` + currentEditId,
                 {
@@ -127,13 +128,16 @@ const ProductsPage: React.FC = () => {
                     description,
                     price,
                 },
+
                 {
                     headers: {
                         Authorization: "Bearer " + token,
                     },
                 }
             );
-            setProducts(response.data);
+
+            fetchProducts();
+            closeModal();
         } catch (error) {
             console.error("Error fetching orders:", error);
         }
@@ -152,6 +156,7 @@ const ProductsPage: React.FC = () => {
                 },
                 {
                     headers: {
+                        "Content-Type": "multipart/form-data",
                         Authorization: "Bearer " + token,
                     },
                 }
@@ -159,7 +164,7 @@ const ProductsPage: React.FC = () => {
 
             // Update the products list with the newly created product
             setProducts([...products, response.data]);
-
+            fetchProducts();
             closeModal();
         } catch (error) {
             console.error("Error adding product:", error);
@@ -170,7 +175,7 @@ const ProductsPage: React.FC = () => {
         productId: string,
         productName: string,
         productDesc: string,
-        productPrice: string
+        productPrice: number
     ) => {
         setCurrentEditId(productId);
         setName(productName);
@@ -348,7 +353,7 @@ const ProductsPage: React.FC = () => {
                                     name="image"
                                     accept="image/*"
                                     onChange={handleImageUpload}
-                                    className="border bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
+                                    className="border text-white bg-slate-800 rounded-md px-3 py-2 w-full focus:outline-none focus:ring focus:border-slate-400"
                                 />
                             </div>
                             <div className="mb-4">
@@ -356,7 +361,7 @@ const ProductsPage: React.FC = () => {
                                     Price:
                                 </label>
                                 <input
-                                    type="text"
+                                    type="number"
                                     name="price"
                                     value={price}
                                     onChange={(e) => {

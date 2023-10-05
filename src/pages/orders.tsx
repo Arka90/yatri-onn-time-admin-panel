@@ -16,6 +16,13 @@ interface Order {
     _id: string;
 }
 
+const statusOptions = [
+    { key: "Pending", value: "pending" },
+    { key: "In Progress", value: "in_progress" },
+    { key: "Out for Delivery", value: "out_for_delivery" },
+    { key: "Delivered", value: "delivered" },
+];
+
 const OrdersPage: React.FC = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [selectedStatuses, setSelectedStatuses] = useState<{
@@ -53,6 +60,7 @@ const OrdersPage: React.FC = () => {
             );
 
             fetchOrders();
+            alert("Order deleted successfully.");
         } catch (error) {
             console.log("error", error);
         }
@@ -71,8 +79,10 @@ const OrdersPage: React.FC = () => {
                 }
             );
             fetchOrders();
+            alert("Order status updated successfully.");
         } catch (error) {
             console.log("error", error);
+            alert("Error updating order status. Please try again.");
         }
     };
 
@@ -158,19 +168,22 @@ const OrdersPage: React.FC = () => {
                                                         )
                                                     }
                                                 >
-                                                    {[
-                                                        "pending",
-                                                        "in_progress",
-                                                        "out_for_delivery",
-                                                        "delivered",
-                                                    ].map((status) => (
-                                                        <option
-                                                            key={status}
-                                                            value={status}
-                                                        >
-                                                            {status}
-                                                        </option>
-                                                    ))}
+                                                    {statusOptions.map(
+                                                        (statusOption) => (
+                                                            <option
+                                                                key={
+                                                                    statusOption.value
+                                                                }
+                                                                value={
+                                                                    statusOption.value
+                                                                }
+                                                            >
+                                                                {
+                                                                    statusOption.key
+                                                                }
+                                                            </option>
+                                                        )
+                                                    )}
                                                 </select>
                                             </td>
 
