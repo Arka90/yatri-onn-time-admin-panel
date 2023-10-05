@@ -27,7 +27,7 @@ const ProductsPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
   const [isEditLoading, setIsEditLoading] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
@@ -42,12 +42,14 @@ const ProductsPage: React.FC = () => {
   });
 
   useEffect(() => {
+    setIsInitialLoading(true);
     const token = getAdminToken();
-    fetchProducts();
+    fetchProducts().then(() => {
+      setIsInitialLoading(false);
+    });
   }, []);
 
   const fetchProducts = async () => {
-    setIsLoading(true);
     const token = getAdminToken();
     try {
       const response = await axios.get<Product[]>(
@@ -63,7 +65,6 @@ const ProductsPage: React.FC = () => {
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
-      setIsLoading(false);
     }
   };
 
@@ -245,106 +246,132 @@ const ProductsPage: React.FC = () => {
         ) : (
           <>
             {" "}
-            <button
-              onClick={openModal}
-              className="btn text-white bg-slate-800 hover:bg-slate-700"
-            >
-              Add a new Product
-            </button>
+            {isInitialLoading ? (
+              <></>
+            ) : (
+              <>
+                <button
+                  onClick={openModal}
+                  className="btn text-white bg-slate-800 hover:bg-slate-700"
+                >
+                  Add a new Product
+                </button>
+              </>
+            )}
           </>
         )}
-
-        <div className="col-span-2 card h-fit my-5">
-          <div className="flex items-center justify-around">
-            <div className="overflow-x-auto">
-              <table className="w-full table-auto" style={{ width: "80vw" }}>
-                <thead>
-                  <tr>
-                    <th className="border px-4 py-2">Image</th>
-                    <th className="border px-4 py-2">ID</th>
-                    <th className="border px-4 py-2">Name</th>
-                    <th className="border px-4 py-2">Description</th>
-                    <th className="border px-4 py-2">Price</th>
-                    <th className="border px-4 py-2">In Stock</th>
-                    <th className="border px-4 py-2">Edit</th>
-                    <th className="border px-4 py-2">Delete</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.map((product) => (
-                    <tr key={product._id}>
-                      <td className="border px-4 py-2 text-center">
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          style={{
-                            maxWidth: "100px",
-                          }}
-                        />
-                      </td>
-                      <td className="border px-4 py-2 text-center">
-                        {product._id}
-                      </td>
-                      <td className="border px-4 py-2 text-center">
-                        {product.name}
-                      </td>
-                      <td className="border px-4 py-2 text-center">
-                        {product.description}
-                      </td>
-                      <td className="border px-4 py-2 text-center">
-                        {product.price}
-                      </td>
-                      <td className="border px-4 py-2 text-center">
-                        {product.inStock ? "Yes" : "No"}
-                      </td>
-                      <td className="border px-4 py-2 text-center cursor-pointer">
-                        {isEditLoading && currentEditId == product._id ? (
-                          <>
-                            {" "}
-                            <PulseLoader color="#334155" size={10} />
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() =>
-                                openEditProductModal(
-                                  product._id,
-                                  product.name,
-                                  product.description,
-                                  product.price,
-                                  product.inStock
-                                )
-                              }
-                              className="mr-2"
-                            >
-                              <PencilIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
-                            </button>
-                          </>
-                        )}
-                      </td>
-                      <td className="border px-4 py-2 text-center cursor-pointer">
-                        {isDeleteLoading && currentDeleteId === product._id ? (
-                          <>
-                            {" "}
-                            <PulseLoader color="#334155" size={10} />
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleDeleteProduct(product._id)}
-                            >
-                              <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
-                            </button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {isInitialLoading ? (
+          <>
+            {" "}
+            <PulseLoader color="#334155" />
+          </>
+        ) : (
+          <>
+            <div className="col-span-2 card h-fit my-5">
+              <div className="flex items-center justify-around">
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full table-auto"
+                    style={{ width: "80vw" }}
+                  >
+                    <thead>
+                      <tr>
+                        <th className="border px-4 py-2">Image</th>
+                        <th className="border px-4 py-2">ID</th>
+                        <th className="border px-4 py-2">Name</th>
+                        <th className="border px-4 py-2">Description</th>
+                        <th className="border px-4 py-2">Price</th>
+                        <th className="border px-4 py-2">In Stock</th>
+                        <th className="border px-4 py-2">Edit</th>
+                        <th className="border px-4 py-2">Delete</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map((product) => (
+                        <tr key={product._id}>
+                          <td className="border px-4 py-2 text-center">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              style={{
+                                maxWidth: "100px",
+                              }}
+                            />
+                          </td>
+                          <td className="border px-4 py-2 text-center">
+                            {product._id}
+                          </td>
+                          <td className="border px-4 py-2 text-center">
+                            {product.name}
+                          </td>
+                          <td className="border px-4 py-2 text-center">
+                            {product.description}
+                          </td>
+                          <td className="border px-4 py-2 text-center">
+                            {product.price}
+                          </td>
+                          <td className="border px-4 py-2 text-center">
+                            {product.inStock ? "Yes" : "No"}
+                          </td>
+                          <td className="border px-4 py-2 text-center cursor-pointer">
+                            {isEditLoading && currentEditId == product._id ? (
+                              <>
+                                {" "}
+                                <center>
+                                  <PulseLoader color="#334155" size={10} />
+                                </center>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    openEditProductModal(
+                                      product._id,
+                                      product.name,
+                                      product.description,
+                                      product.price,
+                                      product.inStock
+                                    )
+                                  }
+                                  className="mr-2"
+                                >
+                                  <center>
+                                    <PencilIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
+                                  </center>
+                                </button>
+                              </>
+                            )}
+                          </td>
+                          <td className="border px-4 py-2 text-center cursor-pointer">
+                            {isDeleteLoading &&
+                            currentDeleteId === product._id ? (
+                              <>
+                                {" "}
+                                <center>
+                                  <PulseLoader color="#334155" size={10} />
+                                </center>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    handleDeleteProduct(product._id)
+                                  }
+                                >
+                                  <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </>
       {isModalOpen && (
         <div className="fixed z-10 inset-0 overflow-y-auto">
