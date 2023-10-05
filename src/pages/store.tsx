@@ -27,7 +27,10 @@ const ProductsPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditLoading, setIsEditLoading] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
+  const [currentDeleteId, setCurrentDeleteId] = useState("");
   const [productToEdit, setProductToEdit] = useState<Product>({
     _id: "",
     name: "",
@@ -66,6 +69,8 @@ const ProductsPage: React.FC = () => {
   ) => {};
 
   const deleteProduct = async (productId: string) => {
+    setCurrentDeleteId(productId);
+    setIsDeleteLoading(true);
     const token = getAdminToken();
     try {
       const response = await axios.delete<Product>(
@@ -77,9 +82,15 @@ const ProductsPage: React.FC = () => {
         }
       );
       //fetch again
-      fetchProducts();
+      setIsDeleteLoading(false);
+      fetchProducts().then(() => {
+        alert("Product deleted successfully !");
+      });
     } catch (error) {
       console.log("error", error);
+      alert("Something went wrong " + error);
+    } finally {
+      setCurrentDeleteId("");
     }
   };
 
@@ -119,6 +130,8 @@ const ProductsPage: React.FC = () => {
   };
 
   const handleEditProduct = async () => {
+    closeModal();
+    setIsEditLoading(true);
     const token = getAdminToken();
     try {
       console.log(typeof price);
@@ -140,9 +153,10 @@ const ProductsPage: React.FC = () => {
 
       fetchProducts();
       console.log(inStock);
-      closeModal();
     } catch (error) {
       console.error("Error fetching orders:", error);
+    } finally {
+      setIsEditLoading(false);
     }
   };
 
@@ -170,10 +184,12 @@ const ProductsPage: React.FC = () => {
 
       setProducts([...products, response.data]);
       fetchProducts();
-    } catch (error) {
-      console.error("Error adding product:", error);
-    } finally {
       setIsLoading(false);
+      alert("Product added successfully");
+    } catch (error: any) {
+      console.error("Error adding product:", error);
+      setIsLoading(false);
+      alert("Something went wrong: " + error.response.data.message);
     }
   };
 
@@ -278,27 +294,45 @@ const ProductsPage: React.FC = () => {
                         {product.inStock ? "Yes" : "No"}
                       </td>
                       <td className="border px-4 py-2 text-center cursor-pointer">
-                        <button
-                          onClick={() =>
-                            openEditProductModal(
-                              product._id,
-                              product.name,
-                              product.description,
-                              product.price,
-                              product.inStock
-                            )
-                          }
-                          className="mr-2"
-                        >
-                          <PencilIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
-                        </button>
+                        {isEditLoading && currentEditId == product._id ? (
+                          <>
+                            {" "}
+                            <PulseLoader color="#334155" size={10} />
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() =>
+                                openEditProductModal(
+                                  product._id,
+                                  product.name,
+                                  product.description,
+                                  product.price,
+                                  product.inStock
+                                )
+                              }
+                              className="mr-2"
+                            >
+                              <PencilIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
+                            </button>
+                          </>
+                        )}
                       </td>
                       <td className="border px-4 py-2 text-center cursor-pointer">
-                        <button
-                          onClick={() => handleDeleteProduct(product._id)}
-                        >
-                          <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
-                        </button>
+                        {isDeleteLoading && currentDeleteId === product._id ? (
+                          <>
+                            {" "}
+                            <PulseLoader color="#334155" size={10} />
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleDeleteProduct(product._id)}
+                            >
+                              <TrashIcon className="h-6 w-6 text-slate-500 hover:text-slate-700" />
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
