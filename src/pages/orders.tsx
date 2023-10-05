@@ -8,11 +8,11 @@ const API_BASE_URL: string | undefined =
     "http://ec2-52-207-129-114.compute-1.amazonaws.com:3100";
 
 interface Order {
-    address: string;
+    address: any;
     price: string;
-    product: string;
+    product: any;
     status: string;
-    user: string;
+    user: any;
     _id: string;
 }
 
@@ -143,13 +143,13 @@ const OrdersPage: React.FC = () => {
                                     {orders.map((order) => (
                                         <tr key={order._id}>
                                             <td className="border px-4 py-2 text-center">
-                                                {order.user}
+                                                {order.user?.name}
                                             </td>
                                             <td className="border px-4 py-2 text-center">
-                                                {order.product}
+                                                {order.product?.name}
                                             </td>
                                             <td className="border px-4 py-2 text-center">
-                                                {order.address}
+                                                {order.address?.house_no}
                                             </td>
                                             <td className="border px-4 py-2 text-center">
                                                 {order.price}
