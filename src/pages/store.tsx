@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, CSSProperties } from "react";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 import BasicLayout from "@/layout/basicLayout";
 import getAdminToken from "@/lib/utils/getAdminToken";
+import PulseLoader from "react-spinners/PulseLoader";
 
 const API_BASE_URL: string | undefined =
   "http://ec2-52-207-129-114.compute-1.amazonaws.com:3100";
@@ -22,10 +23,10 @@ const ProductsPage: React.FC = () => {
   const [price, setPrice] = useState<number>(0);
   const [currentEditId, setCurrentEditId] = useState("");
   const [inStock, setInStock] = useState(false);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [productToEdit, setProductToEdit] = useState<Product>({
     _id: "",
@@ -146,6 +147,8 @@ const ProductsPage: React.FC = () => {
   };
 
   const handleAddProduct = async () => {
+    closeModal();
+    setIsLoading(true);
     const token = getAdminToken();
     try {
       const response = await axios.post<Product>(
@@ -167,9 +170,10 @@ const ProductsPage: React.FC = () => {
 
       setProducts([...products, response.data]);
       fetchProducts();
-      closeModal();
     } catch (error) {
       console.error("Error adding product:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -214,12 +218,22 @@ const ProductsPage: React.FC = () => {
         <div className="font-semibold text-4xl text-slate-800 mb-6">
           Product details
         </div>
-        <button
-          onClick={openModal}
-          className="btn text-white bg-slate-800 hover:bg-slate-700"
-        >
-          Add a new Product
-        </button>
+        {isLoading ? (
+          <>
+            <PulseLoader color="#334155" />
+          </>
+        ) : (
+          <>
+            {" "}
+            <button
+              onClick={openModal}
+              className="btn text-white bg-slate-800 hover:bg-slate-700"
+            >
+              Add a new Product
+            </button>
+          </>
+        )}
+
         <div className="col-span-2 card h-fit my-5">
           <div className="flex items-center justify-around">
             <div className="overflow-x-auto">
@@ -367,9 +381,18 @@ const ProductsPage: React.FC = () => {
                   }}
                   className="text-slate-800"
                 />
-                <p className="text-white text-sm mt-2">
-                  {inStock ? "Yes" : "Out of Stock"}
-                </p>
+                <label
+                  htmlFor="inStock"
+                  className=" text-white text-sm font-semibold mb-2"
+                >
+                  {" "}
+                  &nbsp;
+                  {inStock ? " Yes" : " Out of Stock"}
+                  {/* <p className="text-white text-sm mt-2">
+                    {inStock ? "Yes" : "Out of Stock"}
+                  </p> */}
+                </label>
+                <br></br>
               </div>
 
               <div className=" py-4">
